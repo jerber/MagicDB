@@ -1,5 +1,5 @@
 # MagicDB
-The easiest way to use store data.
+The easiest way to store data.
 
 ## Instalation
 ```
