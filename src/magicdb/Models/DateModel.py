@@ -4,8 +4,8 @@ from magicdb.utils import make_update_obj
 
 
 class DateModel(MagicModel):
-	created_at: datetime
-	last_updated: datetime
+	created_at: datetime = None
+	last_updated: datetime = None
 
 	def save(self, created_at=None, last_updated=None, *args, **kwargs):
 		if not self.created_at: self.created_at = created_at or datetime.utcnow()
