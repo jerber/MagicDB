@@ -40,16 +40,16 @@ class MagicModel(BaseModel, metaclass=QueryAndBaseMetaClasses):
 		if forgiveness is None:
 			forgiveness = from_db
 
-		self.set_meta(kwargs, from_db)
+		self.set_db_fields(kwargs, from_db)
 		self.add_init_forgiveness(**kwargs) if forgiveness else BaseModel.__init__(self, **kwargs)
 
-	def set_meta(self, kwargs, from_db=False):
-		self.meta.id = kwargs.get('id')
-		self.meta.key = kwargs.get('key')
-		self.meta.parent = kwargs.get('parent')
-		self.meta.ref = kwargs.get('ref')
-		self.meta.kwargs_from_db = kwargs if from_db else {}
-		self.make_meta()
+	def set_db_fields(self, kwargs, from_db=False):
+		self.db_fields.id = kwargs.get('id')
+		self.db_fields.key = kwargs.get('key')
+		self.db_fields.parent = kwargs.get('parent')
+		self.db_fields.ref = kwargs.get('ref')
+		self.db_fields.kwargs_from_db = kwargs if from_db else {}
+		self.make_db_fields()
 
 	def add_init_forgiveness(self, **kwargs):
 		fields: Dict[str, ModelField] = self.__class__.__fields__
@@ -76,32 +76,33 @@ class MagicModel(BaseModel, metaclass=QueryAndBaseMetaClasses):
 
 	"""CREATE META FIELDS"""
 
-	def make_meta(self):
-		"""Will make meta information either from key, ref, or id (included no id given or parent given).
+	def make_db_fields(self):
+		"""Will make db_fields information either from key, ref, or id (included no id given or parent given).
 		Whichever one exists, in that order."""
-		if getattr(self.meta, 'key', None):
-			self.make_meta_from_key()
-		elif getattr(self.meta, 'ref', None):
-			self.make_meta_from_ref()
+		if getattr(self.db_fields, 'key', None):
+			self.make_db_fields_from_key()
+		elif getattr(self.db_fields, 'ref', None):
+			self.make_db_fields_from_ref()
 		else:
-			self.make_meta_from_id()
+			self.make_db_fields_from_id()
 
-	def make_meta_from_key(self):
-		self.meta.ref = db.conn.document(self.meta.key)
-		self.meta.id = self.id_from_key(self.meta.key)
+	def make_db_fields_from_key(self):
+		self.db_fields.ref = db.conn.document(self.db_fields.key)
+		self.db_fields.id = self.id_from_key(self.db_fields.key)
 
-	def make_meta_from_ref(self):
-		self.meta.key = self.key_from_ref(self.meta.ref)
-		self.meta.id = self.id_from_key(self.meta.key)
+	def make_db_fields_from_ref(self):
+		self.db_fields.key = self.key_from_ref(self.db_fields.ref)
+		self.db_fields.id = self.id_from_key(self.db_fields.key)
 
-	def make_meta_from_id(self):
-		"""Assigns meta fields using an id if given. Otherwise, makes an id... Also uses parent if necessary."""
+	def make_db_fields_from_id(self):
+		"""Assigns db_fields fields using an id if given. Otherwise, makes an id... Also uses parent if necessary."""
 		collection_name = self.get_collection_name()
 		collection_ref = db.conn.collection(
-			collection_name) if not self.meta.parent else self.meta.parent.ref.collection(
+			collection_name) if not self.db_fields.parent else self.db_fields.parent.ref.collection(
 			collection_name)
-		self.meta.ref = collection_ref.document() if not self.meta.id else collection_ref.document(self.meta.id)
-		self.make_meta_from_ref()
+		self.db_fields.ref = collection_ref.document() if not self.db_fields.id else collection_ref.document(
+			self.db_fields.id)
+		self.make_db_fields_from_ref()
 
 	"""COLLECTION CLASS FUNCTIONS"""
 
@@ -126,51 +127,52 @@ class MagicModel(BaseModel, metaclass=QueryAndBaseMetaClasses):
 	"""GETTERS AND SETTERS FOR META FIELDS"""
 
 	@property
-	def meta(self):
-		meta = getattr(self.__class__, 'Meta', None)
-		if not meta:
-			class Meta:
-				collection_name = self.make_collection_name()
+	def db_fields(self):
+		db_fields = getattr(self.Config, 'db_fields', None)
+		if not db_fields:
+			class DBFields:
+				pass
 
-			setattr(self.__class__, 'Meta', Meta)
-			meta = Meta
-		return meta
+			self.Config.db_fields = DBFields
+			db_fields = self.Config.db_fields
+
+		return db_fields
 
 	@property
 	def id(self):
-		return self.meta.id
+		return self.db_fields.id
 
 	@id.setter
 	def id(self, id):
-		self.meta.id = id
-		self.make_meta_from_id()
+		self.db_fields.id = id
+		self.make_db_fields_from_id()
 
 	@property
 	def key(self):
-		return self.meta.key
+		return self.db_fields.key
 
 	@key.setter
 	def key(self, key):
-		self.meta.key = key
-		self.make_meta_from_key()
+		self.db_fields.key = key
+		self.make_db_fields_from_key()
 
 	@property
 	def parent(self):
-		return self.meta.parent
+		return self.db_fields.parent
 
 	@parent.setter
 	def parent(self, parent):
-		self.meta.parent = parent
-		self.make_meta_from_id()
+		self.db_fields.parent = parent
+		self.make_db_fields_from_id()
 
 	@property
 	def ref(self):
-		return self.meta.ref
+		return self.db_fields.ref
 
 	@ref.setter
 	def ref(self, ref):
-		self.meta.ref = ref
-		self.make_meta_from_ref()
+		self.db_fields.ref = ref
+		self.make_db_fields_from_ref()
 
 	"""ADDING TO FIRESTORE"""
 
@@ -179,30 +181,30 @@ class MagicModel(BaseModel, metaclass=QueryAndBaseMetaClasses):
 		# validate_py update the internal dict to make all deleted fields are None and validates all fields
 		if not ignore_fields: self.validate_py()
 		new_d = self.dict()
-		self.meta.ref.set(new_d, merge=merge) if not batch else batch.set(self.meta.ref, new_d, merge=merge)
-		if not merge: self.meta.kwargs_from_db = copy.deepcopy(new_d)
+		self.db_fields.ref.set(new_d, merge=merge) if not batch else batch.set(self.db_fields.ref, new_d, merge=merge)
+		if not merge: self.db_fields.kwargs_from_db = copy.deepcopy(new_d)
 		return self
 
 	def update(self, batch=None, create=False, ignore_fields=False):
 		if not ignore_fields: self.validate_py()
 		new_d = self.dict()
-		update_d = new_d if not self.meta.kwargs_from_db else make_update_obj(
-			original=self.meta.kwargs_from_db, new=new_d
+		update_d = new_d if not self.db_fields.kwargs_from_db else make_update_obj(
+			original=self.db_fields.kwargs_from_db, new=new_d
 		)
 
 		try:
-			self.meta.ref.update(update_d) if not batch else batch.update(self.meta.ref, update_d)
+			self.db_fields.ref.update(update_d) if not batch else batch.update(self.db_fields.ref, update_d)
 			return self
 		except Exception as e:
 			if hasattr(e, 'message') and 'no document to update' in e.message.lower():
 				if create:
 					return self.save(batch=batch)
 				else:
-					db_error = DatabaseError(self.meta.key)
+					db_error = DatabaseError(self.db_fields.key)
 					raise DatabaseError(db_error.message)
 
 	def delete(self, batch=None):
-		return self.meta.ref.delete() if not batch else batch.delete(self.meta.ref)
+		return self.db_fields.ref.delete() if not batch else batch.delete(self.db_fields.ref)
 
 	"""QUERYING AND COLLECTIONS"""
 
