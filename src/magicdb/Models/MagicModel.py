@@ -36,7 +36,10 @@ class QueryAndBaseMetaClasses(ModelMetaclass, QueryMeta):
 class MagicModel(BaseModel, metaclass=QueryAndBaseMetaClasses):
 	"""Class that wraps BaseModel, giving Firestore functionality and field forgiveness"""
 
-	def __init__(self, from_db=False, forgiveness=True, **kwargs):
+	def __init__(self, from_db=False, forgiveness=None, **kwargs):
+		if forgiveness is None:
+			forgiveness = from_db
+
 		self.set_meta(kwargs, from_db)
 		self.add_init_forgiveness(**kwargs) if forgiveness else BaseModel.__init__(self, **kwargs)
 
