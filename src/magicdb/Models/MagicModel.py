@@ -128,15 +128,20 @@ class MagicModel(BaseModel, metaclass=QueryAndBaseMetaClasses):
 
 	@property
 	def db_fields(self):
-		db_fields = getattr(self.Config, 'db_fields', None)
-		if not db_fields:
-			class DBFields:
+		meta = getattr(self.__class__, 'Meta', None)
+
+		class Instance:
+			pass
+
+		if not meta:
+			class Meta:
 				pass
+			self.__class__.Meta = Meta
+			meta = self.__class__.Meta
 
-			self.Config.db_fields = DBFields
-			db_fields = self.Config.db_fields
-
-		return db_fields
+		if not hasattr(meta, 'instances'): meta.instances: Dict[int: Instance] = {}
+		if id(self) not in meta.instances: meta.instances[id(self)] = Instance()
+		return meta.instances[id(self)]
 
 	@property
 	def id(self):
