@@ -36,14 +36,11 @@ class Manager(MagicModel):
 	company: str = 'Dunder Mifflin'
 	startedWorkingAt: datetime = None
 
-m = Manager(name='Michael Scott')  # you can pass in fields or set them later
+# m = Manager(name='Michael Scott', age=44)  # you must pass in the required fields on initializing the object.
 m.age = 45
 m.save()  # Success! New doc in collection "manager" as: { name: Michael Scott, age: 45, company: Dunder Mifflin }
 
-m = Manager()
-m.name = 'Dwight Schrute'
-print(m.save())  # Exception since age is required but not given
-
+m = Manager(name='Dwight Schrute') # Exception since age is required but not given
 ```
 
 You can also add other Objects as a field.
