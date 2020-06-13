@@ -18,7 +18,7 @@ class DateModel(MagicModel):
 
 	# TODO not sure if this works so check...
 	def dict(self, nested=False, *args, **kwargs):
-		d = super().dict()
+		d = super().dict(*args, **kwargs)
 		if not self.db_fields.kwargs_from_db or not nested: return d  # TODO check to see if this works
 		update_d = make_update_obj(self.db_fields.kwargs_from_db, d)
 		if not update_d == {} or ('last_updated' in update_d and len(update_d) == 1):
