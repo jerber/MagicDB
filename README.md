@@ -9,6 +9,21 @@ The easiest way to store data.
 pip install magicdb
 ```
 
+## Initialize the DB
+MagicDB is initialized via a Firestore service account json which you download from your Firebase console.
+Once you have the json, you must tell MagicDB where it is, either by 1) setting the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to the json path, or by 2) calling magicdb.connect with the path:
+
+```python
+# 1)
+# You can set the env variable from the terminal too: export GOOGLE_APPLICATION_CREDENTIALS="path/to/my-service-account.json"
+import os
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "path/to/my-service-account.json"
+
+# 2)
+import magicdb
+magicdb.connect(from_file="path/to/my-service-account.json")
+```
+
 ## Example
 ```python
 from magicdb.Models import MagicModel
