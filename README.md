@@ -19,6 +19,8 @@ Once you have the json, you must tell MagicDB where it is, either by 1) setting 
 import os
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "path/to/my-service-account.json"
 
+# OR
+
 # 2)
 import magicdb
 magicdb.connect(from_file="path/to/my-service-account.json")
