@@ -1,5 +1,8 @@
 # MagicDB
+A fully typed Firestore ORM for python.
+
 The easiest way to store data.
+
 
 ## Instalation
 ```
