@@ -1,8 +1,7 @@
 # MagicDB
-A fully typed Firestore ORM for python.
+A fully typed Firestore ORM for python -- the easiest way to store data.
 
-The easiest way to store data.
-
+MagicDB inherets from Pydantic, so you get all the power of Pydantic models with the functionality of Firestore.
 
 ## Instalation
 ```
