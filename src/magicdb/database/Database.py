@@ -8,8 +8,8 @@ class Database:
 		self._conn = None
 
 	def connect(self, creds=None, from_file=None, firestore_instance=None):
-		if not creds and not from_file:
-			raise Exception("Credentials or service account json file path required to connect with firestore")
+		if not creds and not from_file and not firestore_instance:
+			raise Exception("Credentials, service account json file path, or firestore_instance required to connect with firestore")
 		if not creds:
 			creds = credentials.Certificate(from_file)
 		try:
