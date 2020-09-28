@@ -1,3 +1,5 @@
+# THIS REPO IS DEPRICATED FOR MAGICDB_NEW. pip install magicdb still works with the supported version.
+
 # MagicDB
 A fully typed Firestore ORM for python -- the easiest way to store data.
 
